@@ -3,15 +3,16 @@ from typing import List
 from PySide6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
                              QComboBox, QListWidget, QListWidgetItem, 
                              QLabel, QPushButton)
+from person import Person
 
-class NameListEditor(QWidget):
-    def __init__(self, available_names):
+class PeopleListEditor(QWidget):
+    def __init__(self, people: List[Person]):
         super().__init__()
-        self.all_names = []
-        self.current_names = []
+        self.current_people: List[Person] = []
         self._callbacks = [] # List of registered callback functions
-        self.diff_added = []
-        self.diff_removed = []
+        self.diff_added: List[Person] = []
+        self.diff_removed: List[Person] = []
+        self.people: List[Person] = people
         
         # UI Setup
         self.layout = QVBoxLayout(self)
@@ -20,17 +21,17 @@ class NameListEditor(QWidget):
         
         self.list_widget = QListWidget()
         
-        self.layout.addWidget(QLabel("Available Names:"))
+        self.layout.addWidget(QLabel("Available People:"))
         self.layout.addWidget(self.combo)
-        self.layout.addWidget(QLabel("Selected Names:"))
+        self.layout.addWidget(QLabel("Selected People:"))
         self.layout.addWidget(self.list_widget)
         
-        self.set_data(available_names)
+        self.set_data(self.people)
 
     # --- Callback Interface ---
     def register_callback(self, func):
         """Registers a function to be called when items are added or removed.
-        The function should accept two arguments: (action: str, name: str)
+        The function should accept two arguments: (action: str, person: Person)
         """
         if func not in self._callbacks:
             self._callbacks.append(func)
@@ -44,83 +45,78 @@ class NameListEditor(QWidget):
                 print(f"Error in callback: {e}")
 
     # --- Public API for Data Management ---
-    def set_data(self, available_names, current_names:List[str]=None):
-        """Resets the widget with new data pools."""
-        self.all_names = sorted(list(set(available_names)))
-        self.current_names = []
+    def set_data(self, people: List[Person], current_people: List[int] = []):
+        self.people: List[Person] = people
+        self.current_people = []
         self.list_widget.clear()
         
-        if current_names:
-            for name in current_names:
-                if name in self.all_names:
-                    self.add_item(name, notify=False) # Don't notify on bulk load
+        if current_people:
+            for person in current_people:
+                self.add_item(person, notify=False)
         
         self.update_combo_options()
 
-    def add_item(self, name, notify=True):
-        """Programmatic interface to add an item."""
-        if name in self.all_names and name not in self.current_names:
-            self.current_names.append(name)
-            self._create_list_row(name)
+    def add_item(self, person: Person, notify=True):
+        if person in self.people and person not in self.current_people:
+            self.current_people.append(person)
+            self._create_list_row(person)
             self.update_combo_options()
             if notify:
-                if name in self.diff_removed:
-                    self.diff_removed.remove(name)
+                if person in self.diff_removed:
+                    self.diff_removed.remove(person)
                 else:
-                    self.diff_added.append(name)
-                self._notify("added", name)
+                    self.diff_added.append(person)
+                self._notify("added", person)
             return True
         return False
 
-    def remove_item(self, name, notify=True):
-        """Programmatic interface to remove an item."""
-        if name in self.current_names:
-            self.current_names.remove(name)
+    def remove_item(self, person: Person, notify=True):
+        if person in self.current_people:
+            self.current_people.remove(person)
             # Find the widget item associated with this name
             for i in range(self.list_widget.count()):
                 item = self.list_widget.item(i)
                 # We store the name in the item data or look it up via the widget
                 row_widget = self.list_widget.itemWidget(item)
-                if row_widget.findChild(QLabel).text() == name:
+                if row_widget.findChild(QLabel).text() == person.name:
                     self.list_widget.takeItem(i)
                     break
             
             self.update_combo_options()
             if notify:
-                if name in self.diff_added:
-                    self.diff_added.remove(name)
+                if person in self.diff_added:
+                    self.diff_added.remove(person)
                 else:
-                    self.diff_removed.append(name)
-                self._notify("removed", name)
+                    self.diff_removed.append(person)
+                self._notify("removed", person)
             return True
         return False
 
     # --- Internal UI Logic ---
     def update_combo_options(self):
         self.combo.clear()
-        remaining = [n for n in self.all_names if n not in self.current_names]
-        if remaining:
+        self.selection: List[Person] = [x for x in self.people if x not in self.current_people]
+        if self.selection:
             self.combo.addItem("Select to add...")
-            self.combo.addItems(remaining)
+            self.combo.addItems([x.name for x in self.selection])
         else:
             self.combo.addItem("No more items")
 
     def _on_combo_activated(self, index):
-        name = self.combo.itemText(index)
-        if name not in ["Select to add...", "No more items"]:
-            self.add_item(name)
+        if index > 0:
+            self.add_item(self.selection[index - 1])
 
-    def _create_list_row(self, name):
+    def _create_list_row(self, person: Person):
         """Creates the visual row with label and button."""
         item = QListWidgetItem(self.list_widget)
         row_widget = QWidget()
         row_layout = QHBoxLayout(row_widget)
         row_layout.setContentsMargins(5, 2, 5, 2)
         
-        label = QLabel(name)
+        label = QLabel(person.name)
         btn = QPushButton("X")
         btn.setFixedWidth(30)
-        btn.clicked.connect(lambda: self.remove_item(name))
+        btn.clicked.connect(lambda: self.remove_item(person))
         
         row_layout.addWidget(label)
         row_layout.addStretch()
@@ -130,19 +126,28 @@ class NameListEditor(QWidget):
         self.list_widget.setItemWidget(item, row_widget)
 
 # --- Example Usage ---
-def my_logger(action, name):
-    print(f"NOTIFICATION: Item '{name}' was {action}.")
+def my_logger(action, person: Person):
+    print(f"NOTIFICATION: Item '{person}' was {action}.")
+
+def get_mock_people():
+    return [
+        Person(id=1, name="Alice Smith", birth_date="1990-01-01"),
+        Person(id=2, name="Bob Jones", birth_date="1985-05-12"),
+        Person(id=3, name="Charlie Brown", birth_date="2010-07-20"),
+        Person(id=4, name="Diana Prince", birth_date="1988-11-30"),
+    ]
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     
-    manager = NameListEditor(["Python", "Rust", "Swift", "Kotlin"])
+    people = get_mock_people()
+    manager = PeopleListEditor(people)
     manager.register_callback(my_logger)
     manager.show()
 
     # Demonstration of programmatic API
     from PySide6.QtCore import QTimer
-    QTimer.singleShot(2000, lambda: manager.add_item("Rust"))
-    QTimer.singleShot(4000, lambda: manager.remove_item("Rust"))
+    QTimer.singleShot(2000, lambda: manager.add_item(people[0]))
+    QTimer.singleShot(4000, lambda: manager.remove_item(people[0]))
 
     sys.exit(app.exec())

@@ -16,29 +16,27 @@ class RefSelector(QComboBox):
         super().__init__()
         self.activated.connect(self._on_combo_activated)
         self.people: List[Person] = []
-        self.selection: Person = None
+        self.selected: Person = None
         self.updated_cb = updated_cb
     
     def set_options(self, people: List[Person]):
         self.people = people
         
         self.clear()
-        names = [n.name for n in self.people]
-        if names:
+        if self.people:
             self.addItem("Select to add...")
-            self.addItems(names)
+            self.addItems([x.name for x in self.people])
         else:
             self.addItem("No more items")
 
-        if self.selection in self.people:
+        if self.selected in self.people:
             self.removeItem(0)
-            self.setCurrentIndex(names.index(self.selection.name))
+            self.setCurrentIndex(self.people.index(self.selected))
     
     def _on_combo_activated(self, index):
-        name = self.itemText(index)
-        if name not in ["Select referece", "No items"]:
-            self.updated_cb(name)
-            self.selection = next(x for x in self.people if x.name == name)
+        if index > 0:
+            self.updated_cb(self.people[index - 1])
+            self.selected = self.people[index - 1]
 
 class FamilyTreeView(QVBoxLayout):
     def __init__(self):
@@ -87,10 +85,7 @@ class FamilyTreeView(QVBoxLayout):
 
         image.save(path, "JPEG")
 
-    def select_ref(self, person_a: str):
+    def select_ref(self, person_a: Person):
         self.ref_people.clear()
-
-        ref = next(x for x in self.people if x.name == person_a)
-        if ref:
-            self.ref_people.append(ref)
+        self.ref_people.append(person_a)
         self.draw_tree()

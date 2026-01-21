@@ -6,9 +6,9 @@ class Person:
     id: int
     name: str
     birth_date: str
-    partners: List[str] = field(default_factory=list)
-    parents: List[str] = field(default_factory=list)
-    kids: List[str] = field(default_factory=list)
+    partners: List[int] = field(default_factory=list)
+    parents: List[int] = field(default_factory=list)
+    kids: List[int] = field(default_factory=list)
 
     @property
     def birth_year(self) -> int:
