@@ -16,6 +16,13 @@ class Person:
             return int(self.birth_date.split("-")[0])
         except Exception:
             return 0
+    
+    @property
+    def name_n_birth(self) -> str:
+        try:
+            return self.name + "(" + str(self.birth_year) + ")"
+        except Exception:
+            return 0
 
     @classmethod
     def from_dict(cls, data: dict) -> "Person":

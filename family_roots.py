@@ -11,7 +11,7 @@ from person import Person
 from graph_person import GraphPerson
 from family_unit import FamilyUnit, MARGIN, MARGIN_UNITS
 
-class FamilyBranches(QGraphicsItem):
+class FamilyRoots(QGraphicsItem):
     GEN_OFFSET: int = GraphPerson.HEIGHT + MARGIN_UNITS
 
     def __init__(self, reference_person: Person, people: List[Person], parent=None):
@@ -21,56 +21,57 @@ class FamilyBranches(QGraphicsItem):
         self.gen_counter = 0
         self.ref_unit: FamilyUnit = self.build_unit(reference_person, people)
 
-        self.ref_unit.setPos(0,0)
-        self.y_offset = 0
+        self.y_offset = self.max_gen_num * self.GEN_OFFSET
         self.draw_unit(self.ref_unit,0)
+        self.ref_unit.setPos(0,self.y_offset)
+
         self.draw_connections(self.ref_unit)
 
     def build_unit(self, person: Person, people: List[Person]) -> FamilyUnit:
         unit: FamilyUnit = FamilyUnit(person, people, self)
-        children_units: List[FamilyUnit] = []
-        for kid_id in person.kids:
-            for kid in (kid for kid in people if kid_id == kid.id):
+        units: List[FamilyUnit] = []
+        for id in [head.parents[0] for head in unit.unit_head if head.parents]:
+            for person in (person for person in people if id == person.id):
                 self.gen_counter += 1
-                children_units.append(self.build_unit(kid, people))
+                units.append(self.build_unit(person, people))
                 self.max_gen_num = max(self.max_gen_num, self.gen_counter)
                 self.gen_counter -= 1
-        unit.add_children_units(children_units)
+        unit.add_parent_units(units)
         return unit
     
     def draw_unit(self, unit: FamilyUnit, parent_offset_x: int) -> FamilyUnit:
-        children_width = 0
-        child_offset_x = parent_offset_x
+        parents_width = 0
+        parent_offset_x = parent_offset_x
+        unit.align(unit.get_width(with_parents=True))
 
-        for kid_unit in unit.children_units:
-            self.y_offset += self.GEN_OFFSET
-            kid_unit.setPos(child_offset_x, self.y_offset)
-            self.draw_unit(kid_unit,child_offset_x)
-            child_offset_x += kid_unit.get_width()+ MARGIN_UNITS
+        for kid_unit in unit.parents_units:
             self.y_offset -= self.GEN_OFFSET
-            children_width += kid_unit.get_width()
+            kid_unit.setPos(parent_offset_x, self.y_offset)
+            self.draw_unit(kid_unit,parent_offset_x)
+            self.y_offset += self.GEN_OFFSET
+            parent_offset_x += kid_unit.get_width(with_parents=True) + MARGIN_UNITS
+            parents_width += kid_unit.get_width(with_parents=True)
         
-        children_width += (len(unit.children_units) - 1) * MARGIN_UNITS if len(unit.children_units) > 0 else 0
+        parents_width += (len(unit.parents_units) - 1) * MARGIN_UNITS if len(unit.parents_units) > 0 else 0
+        
+        if parents_width < unit.get_width(with_parents=True):
+            parent_offset_x = parent_offset_x + (unit.get_width(with_parents=True) - parents_width) / 2
+            for parent_unit in unit.parents_units:
+                parent_unit.setPos(parent_offset_x, parent_unit.y())
+                parent_offset_x += parent_unit.get_width(with_parents=True) + MARGIN_UNITS
 
-        if children_width < unit.get_width():
-            child_offset_x = parent_offset_x + (unit.get_width() - children_width) / 2
-            for child_unit in unit.children_units:
-                child_unit.setPos(child_offset_x, child_unit.y())
-                child_offset_x += child_unit.get_width() + MARGIN_UNITS
-
-        return unit
 
     def draw_connections(self, unit: FamilyUnit):
         pass
     
     def get_width(self):
-        return self.ref_unit.get_width()
+        return self.ref_unit.get_width(with_parents=True)
     
     def get_height(self):
-        return self.max_gen_num * GraphPerson.HEIGHT + (self.max_gen_num - 1) + MARGIN_UNITS
+        return self.max_gen_num * GraphPerson.HEIGHT + (self.max_gen_num) * MARGIN_UNITS
     
     def boundingRect(self):
-        # Expand height to accommodate potential children rows
+        # Expand height to accommodate potential parents rows
         return QRectF(0, 0, self.get_width(), self.get_height())
 
     def paint(self, painter, option, widget):
@@ -80,14 +81,57 @@ class FamilyBranches(QGraphicsItem):
 # class FamilyTree(QWidget):
     
 people_data: List[Person] = [
+    
+    # Generation 0
+    {
+        "id": 13, "name": "A", "birth_date": "1950-05-12",
+        "partners": [14], "kids": [1]
+    },
+    {
+        "id": 14, "name": "B", "birth_date": "1952-08-20",
+        "partners": [13], "kids": [1]
+    },
+    {
+        "id": 15, "name": "C", "birth_date": "1950-05-12",
+        "partners": [16], "kids": [2]
+    },
+    {
+        "id": 16, "name": "D", "birth_date": "1952-08-20",
+        "partners": [15], "kids": [2]
+    },
+    {
+        "id": 17, "name": "E", "birth_date": "1950-05-12",
+        "partners": [18], "kids": [11]
+    },
+    {
+        "id": 18, "name": "F", "birth_date": "1952-08-20",
+        "partners": [17], "kids": [11]
+    },
+    {
+        "id": 19, "name": "G", "birth_date": "1950-05-12",
+        "partners": [20], "kids": [12]
+    },
+    {
+        "id": 20, "name": "H", "birth_date": "1952-08-20",
+        "partners": [19], "kids": [12]
+    },
+
     # Generation 1
     {
         "id": 1, "name": "Arthur Dent", "birth_date": "1950-05-12",
-        "partners": [2], "kids": [3, 5]
+        "parents": [13, 14], "partners": [2], "kids": [3, 5]
     },
     {
         "id": 2, "name": "Beryl Dent", "birth_date": "1952-08-20",
-        "partners": [1], "kids": [3, 5]
+        "parents": [15, 16], "partners": [1], "kids": [3, 5]
+    },
+    {
+        "id": 11, "name": "Arthur Rent", "birth_date": "1950-05-12",
+        "parents": [17, 18], "partners": [12], "kids": [6]
+    },
+    {
+        "id": 12, "name": "Beryl Rent", "birth_date": "1952-08-20",
+        "parents": [19, 20], "partners": [11], "kids": [6]
     },
     
     # Generation 2
@@ -105,7 +149,7 @@ people_data: List[Person] = [
     },
     {
         "id": 6, "name": "George Miller", "birth_date": "1979-06-30",
-        "partners": [5], "kids": [8, 9, 10]
+        "partners": [5], "parents": [11, 12], "kids": [8, 9, 10]
     },
 
     # Generation 3
@@ -135,7 +179,7 @@ import sys
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     
-    branches = FamilyBranches(people[0], people)
+    branches = FamilyRoots(people[-1], people)
     
     scene = QGraphicsScene(0, 0, 1600, 600)
     view = QGraphicsView(scene)

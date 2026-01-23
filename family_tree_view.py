@@ -7,7 +7,9 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QPen, QBrush, QImage, QPainter
 from PySide6.QtCore import Qt
-from family_graph import FamilyBranches, MARGIN
+from family_unit import MARGIN
+from family_branches import FamilyBranches
+from family_roots import FamilyRoots
 
 from person import Person
 
@@ -25,7 +27,7 @@ class RefSelector(QComboBox):
         self.clear()
         if self.people:
             self.addItem("Select to add...")
-            self.addItems([x.name for x in self.people])
+            self.addItems([x.name_n_birth for x in self.people])
         else:
             self.addItem("No more items")
 
@@ -66,8 +68,17 @@ class FamilyTreeView(QVBoxLayout):
         if not self.ref_people:
             self.ref_people.append(self.people[0])
         
+        self.roots = FamilyRoots(self.ref_people[0], self.people)
+        
         self.branches = FamilyBranches(self.ref_people[0], self.people)
-        self.branches.setPos(MARGIN, MARGIN)
+
+        roots_offset = self.branches.ref_unit.x_offset - self.roots.ref_unit.x_offset if self.branches.get_width() > self.roots.get_width() else 0
+        branches_offset = self.roots.ref_unit.x_offset - self.branches.ref_unit.x_offset if self.roots.get_width() > self.branches.get_width() else 0
+        
+        self.roots.setPos(MARGIN + roots_offset, MARGIN)
+        self.branches.setPos(MARGIN + branches_offset, self.roots.get_height() + MARGIN)
+
+        self.scene.addItem(self.roots)
         self.scene.addItem(self.branches)
 
     def export_to_jpeg(self, path: str):

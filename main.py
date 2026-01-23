@@ -86,8 +86,9 @@ class FamilyEditor(QWidget):
 
     def refresh(self):
         self.list_widget.clear()
+        self.people.sort(key = lambda p: p.name)
         for p in self.people:
-            self.list_widget.addItem(p.name or "(Unnamed)")
+            self.list_widget.addItem(p.name_n_birth or "(Unnamed)")
         self.tree_view.set_people(self.people)
         self.tree_view.draw_tree()
 
@@ -129,6 +130,7 @@ class FamilyEditor(QWidget):
         with open(filename, "r", encoding="utf-8") as f:
             data = json.load(f)
         self.people = [Person.from_dict(p) for p in data["people"]]
+        # self.people.sort(key = lambda p: p.name)
         self.person_editor.update_people(self.people)
         self.refresh()
 

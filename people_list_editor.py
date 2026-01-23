@@ -78,7 +78,7 @@ class PeopleListEditor(QWidget):
                 item = self.list_widget.item(i)
                 # We store the name in the item data or look it up via the widget
                 row_widget = self.list_widget.itemWidget(item)
-                if row_widget.findChild(QLabel).text() == person.name:
+                if row_widget.findChild(QLabel).text() == person.name_n_birth:
                     self.list_widget.takeItem(i)
                     break
             
@@ -98,7 +98,7 @@ class PeopleListEditor(QWidget):
         self.selection: List[Person] = [x for x in self.people if x not in self.current_people]
         if self.selection:
             self.combo.addItem("Select to add...")
-            self.combo.addItems([x.name for x in self.selection])
+            self.combo.addItems([x.name_n_birth for x in self.selection])
         else:
             self.combo.addItem("No more items")
 
@@ -113,7 +113,7 @@ class PeopleListEditor(QWidget):
         row_layout = QHBoxLayout(row_widget)
         row_layout.setContentsMargins(5, 2, 5, 2)
         
-        label = QLabel(person.name)
+        label = QLabel(person.name_n_birth)
         btn = QPushButton("X")
         btn.setFixedWidth(30)
         btn.clicked.connect(lambda: self.remove_item(person))

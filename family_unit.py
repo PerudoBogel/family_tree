@@ -28,35 +28,52 @@ class FamilyUnit(QGraphicsItem):
             self.head_graph.append(GraphPerson(head, self))
 
         self.children_units: List["FamilyUnit"] = []
+        self.parents_units: List["FamilyUnit"] = []
         self.display_width = 0
-        self.align_width(self.get_width())
+        self.x_offset = 0
     
-    def add_children_units(self, childer_units: List["FamilyUnit"]):
-        self.children_units = childer_units
-        self.align_width(self.get_width())
+    def add_children_units(self, units: List["FamilyUnit"], update_parent: bool = True):
+        self.children_units += units
+        if update_parent:
+            for unit in self.children_units:
+                unit.add_parent_units([self],False)
+    
+    def add_parent_units(self, units: List["FamilyUnit"], update_parent: bool = True):
+        self.parents_units += units
+        if update_parent:
+            for unit in self.parents_units:
+                unit.add_children_units([self],False)
 
-    def align_width(self, width):
+    def align(self, width):
         head_count = len(self.head_graph)
-        x_offset = (width - (head_count * GraphPerson.WIDTH + (head_count - 1) * MARGIN))/2
+        self.x_offset = (width - (head_count * GraphPerson.WIDTH + (head_count - 1) * MARGIN))/2
         i=0
         for head in self.head_graph:
-            head.setPos(x_offset + i * (GraphPerson.WIDTH + MARGIN), 0)
+            head.setPos(self.x_offset + i * (GraphPerson.WIDTH + MARGIN), 0)
             i += 1
         self.display_width = i * (GraphPerson.WIDTH) + (i - 1) * MARGIN
 
-    def get_width(self):
-        childer_width = 0
-        for unit in self.children_units:
-            childer_width += unit.get_width()
-        if len(self.children_units) > 0:
-            childer_width += (len(self.children_units) - 1) * MARGIN_UNITS
-        
-        head_width = 0
+    def get_width(self, with_parents = False, with_children = False):
+        children_width = 0
+        if with_children:
+            for unit in self.children_units:
+                children_width += unit.get_width(False,with_children)
+            if len(self.children_units) > 0:
+                children_width += (len(self.children_units) - 1) * MARGIN_UNITS
+    
+        parents_width = 0
+        if with_parents:
+            for unit in self.parents_units:
+                parents_width += unit.get_width(with_parents,False)
+            if len(self.parents_units) > 0:
+                parents_width += (len(self.parents_units) - 1) * MARGIN_UNITS
+
+        width = 0
         if len(self.unit_head) > 0:
-            head_width += (len(self.unit_head) - 1) * MARGIN
-            head_width += len(self.unit_head) * GraphPerson.WIDTH
+            width += (len(self.unit_head) - 1) * MARGIN
+            width += len(self.unit_head) * GraphPerson.WIDTH
         
-        return childer_width if childer_width > head_width else head_width
+        return max(children_width, parents_width, width)
 
     def trace(self):
         names: str = "head: "
