@@ -11,9 +11,9 @@ class Person:
     kids: List[int] = field(default_factory=list)
 
     @property
-    def birth_year(self) -> int:
+    def birth_year(self) -> str:
         try:
-            return int(self.birth_date.split("-")[0])
+            return self.birth_date.split("-")[0]
         except Exception:
             return 0
     

@@ -16,6 +16,8 @@ class GraphPerson(QGraphicsRectItem):
         # Initialize with fixed dimensions
         super().__init__(0, 0, self.WIDTH, self.HEIGHT, parent)
         
+        self.person = person
+        
         # 1. Aesthetics (Wood and Moss)
         self.setBrush(QBrush(QColor("#F7F1DE"))) # Background
         self.setPen(QPen(QColor("#4B352A"), 2))   # Border

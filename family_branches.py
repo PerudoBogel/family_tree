@@ -24,7 +24,7 @@ class FamilyBranches(QGraphicsItem):
         self.ref_unit.setPos(0,0)
         self.y_offset = 0
         self.draw_unit(self.ref_unit,0)
-        self.draw_connections(self.ref_unit)
+        self.ref_unit.draw_heads_connection()
 
     def build_unit(self, person: Person, people: List[Person]) -> FamilyUnit:
         unit: FamilyUnit = FamilyUnit(person, people, self)
@@ -58,9 +58,9 @@ class FamilyBranches(QGraphicsItem):
             for child_unit in unit.children_units:
                 child_unit.setPos(child_offset_x, child_unit.y())
                 child_offset_x += child_unit.get_width(with_children=True) + MARGIN_UNITS
-
-    def draw_connections(self, unit: FamilyUnit):
-        pass
+                
+        for kid_unit in unit.children_units:
+            kid_unit.draw_heads_connection()
     
     def get_width(self):
         return self.ref_unit.get_width(with_children=True)

@@ -95,7 +95,7 @@ class FamilyEditor(QWidget):
     def add_person(self):
         self.people.append(Person(self.next_id(), "", "", [], []))
         self.refresh()
-        self.list_widget.setCurrentRow(len(self.people) - 1)
+        self.list_widget.setCurrentRow(0)
 
     def remove_person(self):
         idx = self.list_widget.currentRow()

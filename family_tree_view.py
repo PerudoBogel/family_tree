@@ -69,6 +69,7 @@ class FamilyTreeView(QVBoxLayout):
             self.ref_people.append(self.people[0])
         
         self.roots = FamilyRoots(self.ref_people[0], self.people)
+        self.roots.ref_unit.setVisible(False)
         
         self.branches = FamilyBranches(self.ref_people[0], self.people)
 

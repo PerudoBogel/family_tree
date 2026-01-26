@@ -24,8 +24,7 @@ class FamilyRoots(QGraphicsItem):
         self.y_offset = self.max_gen_num * self.GEN_OFFSET
         self.draw_unit(self.ref_unit,0)
         self.ref_unit.setPos(0,self.y_offset)
-
-        self.draw_connections(self.ref_unit)
+        self.ref_unit.draw_heads_connection()
 
     def build_unit(self, person: Person, people: List[Person]) -> FamilyUnit:
         unit: FamilyUnit = FamilyUnit(person, people, self)
@@ -59,10 +58,9 @@ class FamilyRoots(QGraphicsItem):
             for parent_unit in unit.parents_units:
                 parent_unit.setPos(parent_offset_x, parent_unit.y())
                 parent_offset_x += parent_unit.get_width(with_parents=True) + MARGIN_UNITS
-
-
-    def draw_connections(self, unit: FamilyUnit):
-        pass
+        
+        for kid_unit in unit.parents_units:
+            kid_unit.draw_heads_connection()
     
     def get_width(self):
         return self.ref_unit.get_width(with_parents=True)

@@ -5,13 +5,21 @@ from PySide6.QtWidgets import (
     QApplication, QWidget, QListWidget, QLineEdit, QTextEdit,
     QPushButton, QFileDialog, QLabel, QHBoxLayout, QVBoxLayout,
     QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsTextItem,
-    QMessageBox, QComboBox, QListWidgetItem, QFrame, QGraphicsItem, QGraphicsEllipseItem
+    QMessageBox, QComboBox, QListWidgetItem, QFrame, QGraphicsItem, QGraphicsEllipseItem,
+    QGraphicsLineItem
 )
 from PySide6.QtGui import QPen, QBrush, QColor, QFont, QPainter
-from PySide6.QtCore import QRectF, Qt
+from PySide6.QtCore import QRectF, Qt, QLine
 
 MARGIN: int = 20
 MARGIN_UNITS: int = 80
+
+def get_x_offset(x_offset: int, item: QGraphicsItem):
+    parent = item
+    while parent:
+        x_offset += parent.x()
+        parent = parent.parentItem()
+    return x_offset
 
 class FamilyUnit(QGraphicsItem):
 
@@ -74,6 +82,49 @@ class FamilyUnit(QGraphicsItem):
             width += len(self.unit_head) * GraphPerson.WIDTH
         
         return max(children_width, parents_width, width)
+
+    def draw_heads_connection(self):
+        segments = []
+        mid_point_x = None
+        if len(self.head_graph) > 1:
+            # Define pen style (color, width)
+
+            vert_y: int = int(self.head_graph[0].y() + GraphPerson.HEIGHT + MARGIN_UNITS/4)
+            vert_x1: int = int(self.head_graph[0].x() + GraphPerson.WIDTH*3/4)
+            vert_x2: int = int(self.head_graph[1].x() + GraphPerson.WIDTH*1/4)
+            mid_point_x = (vert_x1 + vert_x2) / 2
+            segments += [
+                QGraphicsLineItem(vert_x1, vert_y - MARGIN_UNITS/4, vert_x1, vert_y,self),
+                QGraphicsLineItem(vert_x2, vert_y - MARGIN_UNITS/4, vert_x2, vert_y,self),
+                QGraphicsLineItem(vert_x1, vert_y, vert_x2, vert_y,self),
+            ]
+        elif len(self.head_graph) == 1:
+            vert_y: int = int(self.head_graph[0].y() + GraphPerson.HEIGHT + MARGIN_UNITS/4)
+            mid_point_x = int(self.head_graph[0].x() + GraphPerson.WIDTH/2)
+            if len(self.children_units)>0:
+                segments.append(QGraphicsLineItem(mid_point_x, vert_y - MARGIN_UNITS/4, mid_point_x, vert_y,self))
+
+        if len(self.children_units)>0 and mid_point_x:
+            start_point_x = mid_point_x
+            start_point_y = vert_y + MARGIN_UNITS/2
+            segments.append(QGraphicsLineItem(start_point_x, vert_y, start_point_x, start_point_y,self))
+            children = []
+            for head in self.unit_head:
+                children += [x for x in head.kids if not x in children]
+            for unit in self.children_units:
+                kid: GraphPerson = next(x for x in unit.head_graph if x.person.id in children)
+                if kid:
+                    mid_offest = get_x_offset(start_point_x, self)
+                    kid_offest = get_x_offset(GraphPerson.WIDTH / 2, kid)
+                    x_offset = mid_offest - kid_offest
+                    end_point_x = start_point_x - x_offset 
+                    end_point_y = start_point_y + MARGIN_UNITS/4
+                    segments.append(QGraphicsLineItem(start_point_x, start_point_y, end_point_x, start_point_y,self))
+                    segments.append(QGraphicsLineItem(end_point_x, start_point_y, end_point_x, end_point_y,self))
+
+        pen = QPen(Qt.black, 3)
+        for segment in segments:
+            segment.setPen(pen)
 
     def trace(self):
         names: str = "head: "
