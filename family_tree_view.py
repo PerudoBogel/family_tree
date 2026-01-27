@@ -72,6 +72,10 @@ class FamilyTreeView(QVBoxLayout):
         self.roots.ref_unit.setVisible(False)
         
         self.branches = FamilyBranches(self.ref_people[0], self.people)
+        
+        for graph in [ x for x in self.branches.ref_unit.head_graph if x.person.name == self.ref_people[0].name]:
+            graph.highlight()
+            graph.update()
 
         roots_offset = self.branches.ref_unit.x_offset - self.roots.ref_unit.x_offset if self.branches.get_width() > self.roots.get_width() else 0
         branches_offset = self.roots.ref_unit.x_offset - self.branches.ref_unit.x_offset if self.roots.get_width() > self.branches.get_width() else 0

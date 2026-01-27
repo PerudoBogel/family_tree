@@ -45,6 +45,10 @@ class GraphPerson(QGraphicsRectItem):
         detail_opt.setAlignment(Qt.AlignCenter)
         self.detail_item.document().setDefaultTextOption(detail_opt)
         self.detail_item.setPos(0, 48)
+    
+    def highlight(self):
+        self.setPen(QPen(QColor("#4B352A"), 5))   # Border
+        self.setBrush(QBrush(QColor("#D4BF79"))) # Background
 
     def paint(self, painter, option, widget):
         """Override to draw rounded corners as per original styling."""
