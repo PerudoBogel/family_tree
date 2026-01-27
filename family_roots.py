@@ -27,7 +27,8 @@ class FamilyRoots(QGraphicsItem):
         self.ref_unit.draw_heads_connection()
 
     def build_unit(self, person: Person, people: List[Person]) -> FamilyUnit:
-        unit: FamilyUnit = FamilyUnit(person, people, self)
+        unit: FamilyUnit = FamilyUnit(person, people, self)      
+
         units: List[FamilyUnit] = []
         for id in [head.parents[0] for head in unit.unit_head if head.parents]:
             for person in (person for person in people if id == person.id):
@@ -40,27 +41,27 @@ class FamilyRoots(QGraphicsItem):
     
     def draw_unit(self, unit: FamilyUnit, parent_offset_x: int) -> FamilyUnit:
         parents_width = 0
-        parent_offset_x = parent_offset_x
+        offset_x = parent_offset_x
         unit.align(unit.get_width(with_parents=True))
 
-        for kid_unit in unit.parents_units:
+        for par_unit in unit.parents_units:
             self.y_offset -= self.GEN_OFFSET
-            kid_unit.setPos(parent_offset_x, self.y_offset)
-            self.draw_unit(kid_unit,parent_offset_x)
+            par_unit.setPos(parent_offset_x, self.y_offset)
+            self.draw_unit(par_unit,parent_offset_x)
             self.y_offset += self.GEN_OFFSET
-            parent_offset_x += kid_unit.get_width(with_parents=True) + MARGIN_UNITS
-            parents_width += kid_unit.get_width(with_parents=True)
+            parent_offset_x += par_unit.get_width(with_parents=True) + MARGIN_UNITS
+            parents_width += par_unit.get_width(with_parents=True)
         
         parents_width += (len(unit.parents_units) - 1) * MARGIN_UNITS if len(unit.parents_units) > 0 else 0
         
         if parents_width < unit.get_width(with_parents=True):
-            parent_offset_x = parent_offset_x + (unit.get_width(with_parents=True) - parents_width) / 2
+            parent_offset_x = offset_x + (unit.get_width(with_parents=True) - parents_width) / 2
             for parent_unit in unit.parents_units:
                 parent_unit.setPos(parent_offset_x, parent_unit.y())
                 parent_offset_x += parent_unit.get_width(with_parents=True) + MARGIN_UNITS
         
-        for kid_unit in unit.parents_units:
-            kid_unit.draw_heads_connection()
+        for par_unit in unit.parents_units:
+            par_unit.draw_heads_connection()
     
     def get_width(self):
         return self.ref_unit.get_width(with_parents=True)
@@ -89,13 +90,13 @@ people_data: List[Person] = [
         "id": 14, "name": "B", "birth_date": "1952-08-20",
         "partners": [13], "kids": [1]
     },
-    {
-        "id": 15, "name": "C", "birth_date": "1950-05-12",
-        "partners": [16], "kids": [2]
-    },
+    # {
+    #     "id": 15, "name": "C", "birth_date": "1950-05-12",
+    #     "partners": [16], "kids": [2]
+    # },
     {
         "id": 16, "name": "D", "birth_date": "1952-08-20",
-        "partners": [15], "kids": [2]
+        "partners": [], "kids": [2]
     },
     {
         "id": 17, "name": "E", "birth_date": "1950-05-12",
@@ -121,7 +122,7 @@ people_data: List[Person] = [
     },
     {
         "id": 2, "name": "Beryl Dent", "birth_date": "1952-08-20",
-        "parents": [15, 16], "partners": [1], "kids": [3, 5]
+        "parents": [16], "partners": [1], "kids": [3, 5]
     },
     {
         "id": 11, "name": "Arthur Rent", "birth_date": "1950-05-12",

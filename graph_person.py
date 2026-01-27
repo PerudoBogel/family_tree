@@ -30,12 +30,12 @@ class GraphPerson(QGraphicsRectItem):
         
         # Center alignment using QTextOption
         name_opt = self.name_item.document().defaultTextOption()
-        name_opt.setAlignment(Qt.AlignCenter)
+        name_opt.setAlignment(Qt.AlignHCenter)
         self.name_item.document().setDefaultTextOption(name_opt)
         self.name_item.setPos(0, 10)
 
         # 3. Details Text (Brown)
-        detail_text = f"{person.birth_date}\n({person.birth_year})"
+        detail_text = f"{person.birth_date}"
         self.detail_item = QGraphicsTextItem(detail_text, self)
         self.detail_item.setFont(QFont("Segoe UI", 8))
         self.detail_item.setDefaultTextColor(QColor("#654321"))
@@ -44,7 +44,7 @@ class GraphPerson(QGraphicsRectItem):
         detail_opt = self.detail_item.document().defaultTextOption()
         detail_opt.setAlignment(Qt.AlignCenter)
         self.detail_item.document().setDefaultTextOption(detail_opt)
-        self.detail_item.setPos(0, 38)
+        self.detail_item.setPos(0, 48)
 
     def paint(self, painter, option, widget):
         """Override to draw rounded corners as per original styling."""

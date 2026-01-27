@@ -13,32 +13,32 @@ from family_roots import FamilyRoots
 
 from person import Person
 
-class RefSelector(QComboBox):
-    def __init__(self, updated_cb):
-        super().__init__()
-        self.activated.connect(self._on_combo_activated)
-        self.people: List[Person] = []
-        self.selected: Person = None
-        self.updated_cb = updated_cb
+# class RefSelector(QComboBox):
+#     def __init__(self, updated_cb):
+#         super().__init__()
+#         self.activated.connect(self._on_combo_activated)
+#         self.people: List[Person] = []
+#         self.selected: Person = None
+#         self.updated_cb = updated_cb
     
-    def set_options(self, people: List[Person]):
-        self.people = people
+#     def set_options(self, people: List[Person]):
+#         self.people = people
         
-        self.clear()
-        if self.people:
-            self.addItem("Select to add...")
-            self.addItems([x.name_n_birth for x in self.people])
-        else:
-            self.addItem("No more items")
+#         self.clear()
+#         if self.people:
+#             self.addItem("Select to add...")
+#             self.addItems([x.name_n_birth for x in self.people])
+#         else:
+#             self.addItem("No more items")
 
-        if self.selected in self.people:
-            self.removeItem(0)
-            self.setCurrentIndex(self.people.index(self.selected))
+#         if self.selected in self.people:
+#             self.removeItem(0)
+#             self.setCurrentIndex(self.people.index(self.selected))
     
-    def _on_combo_activated(self, index):
-        if index > 0:
-            self.updated_cb(self.people[index - 1])
-            self.selected = self.people[index - 1]
+#     def _on_combo_activated(self, index):
+#         if index > 0:
+#             self.updated_cb(self.people[index - 1])
+#             self.selected = self.people[index - 1]
 
 class FamilyTreeView(QVBoxLayout):
     def __init__(self):
@@ -48,9 +48,9 @@ class FamilyTreeView(QVBoxLayout):
         self.graph_view = QGraphicsView(self.scene)
         self.graph_view.setMinimumWidth(600)
 
-        self.ref_selector = RefSelector(self.select_ref)
+        # self.ref_selector = RefSelector(self.select_ref)
 
-        self.addWidget(self.ref_selector)
+        # self.addWidget(self.ref_selector)
         self.addWidget(self.graph_view)
 
         self.people: List[Person] = []
@@ -58,7 +58,7 @@ class FamilyTreeView(QVBoxLayout):
     
     def set_people(self, people: List[Person]):
         self.people = people
-        self.ref_selector.set_options(people)
+        # self.ref_selector.set_options(people)
         self.draw_tree()
 
     def draw_tree(self):

@@ -28,13 +28,16 @@ class FamilyEditor(QWidget):
         self.people: List[Person] = []
         self.current_person = None
         self.selected_index = 0
-
+        
         self.person_editor = PersonEditor()
 
         self.list_widget = QListWidget()
 
         self.add_btn = QPushButton("Add Person")
         self.add_btn.clicked.connect(self.add_person)
+
+        self.edit_btn = QPushButton("Edit Person")
+        self.edit_btn.clicked.connect(self.open_person_editor)
 
         self.remove_btn = QPushButton("Remove Person")
         self.remove_btn.clicked.connect(self.remove_person)
@@ -48,17 +51,24 @@ class FamilyEditor(QWidget):
         self.export_btn = QPushButton("Export Graph (JPEG)")
         self.export_btn.clicked.connect(self.export_graph)
 
+        self.list_widget.currentRowChanged.connect(lambda select_person: self.select_person(select_person))
+        self.person_editor.register_refresh(self.refresh)
+
         self.tree_view = FamilyTreeView()
 
         self.build_ui()
-        
-        self.list_widget.currentRowChanged.connect(lambda select_person: self.person_editor.select_person(select_person))
-
-        self.person_editor.register_refresh(self.refresh)
+    
+    def select_person(self, sel):
+        self.person_editor.select_person(sel)
+        self.tree_view.select_ref(self.person_editor.current_person)
+    
+    def open_person_editor(self):
+        self.person_editor.show()
 
     def build_ui(self):
         left = QVBoxLayout()
         left.addWidget(self.list_widget)
+        left.addWidget(self.edit_btn)
         left.addWidget(self.add_btn)
         left.addWidget(self.remove_btn)
         left.addWidget(self.load_btn)
@@ -66,10 +76,9 @@ class FamilyEditor(QWidget):
         left.addWidget(self.export_btn)
 
         self.fixed_container = QFrame()
-        self.fixed_container.setFixedWidth(450)  # Constrain the sidebar width
+        self.fixed_container.setFixedWidth(250)  # Constrain the sidebar width
         editor = QHBoxLayout(self.fixed_container)
-        editor.addLayout(left,4)
-        editor.addLayout(self.person_editor.layout,5)
+        editor.addLayout(left)
 
         layout = QHBoxLayout(self)
         layout.addWidget(self.fixed_container)

@@ -90,8 +90,8 @@ class FamilyUnit(QGraphicsItem):
             # Define pen style (color, width)
 
             vert_y: int = int(self.head_graph[0].y() + GraphPerson.HEIGHT + MARGIN_UNITS/4)
-            vert_x1: int = int(self.head_graph[0].x() + GraphPerson.WIDTH*3/4)
-            vert_x2: int = int(self.head_graph[1].x() + GraphPerson.WIDTH*1/4)
+            vert_x1: int = int(self.head_graph[0].x() + GraphPerson.WIDTH/2)
+            vert_x2: int = int(self.head_graph[1].x() + GraphPerson.WIDTH/2)
             mid_point_x = (vert_x1 + vert_x2) / 2
             segments += [
                 QGraphicsLineItem(vert_x1, vert_y - MARGIN_UNITS/4, vert_x1, vert_y,self),

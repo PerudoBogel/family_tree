@@ -11,7 +11,7 @@ from typing import List
 from people_list_editor import PeopleListEditor
 from person import Person
 
-class PersonEditor:
+class PersonEditor(QWidget):
 
     def __init__(self):
         super().__init__()
@@ -42,6 +42,7 @@ class PersonEditor:
         self.layout.addWidget(QLabel("Kids"))
         self.layout.addWidget(self.kids_list)
         self.layout.addWidget(self.save_btn)
+        self.setLayout(self.layout)
 
     def register_refresh(self, refresh_callback):
         self.refresh_callback = refresh_callback
