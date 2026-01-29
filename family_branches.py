@@ -14,11 +14,12 @@ from family_unit import FamilyUnit, MARGIN, MARGIN_UNITS
 class FamilyBranches(QGraphicsItem):
     GEN_OFFSET: int = GraphPerson.HEIGHT + MARGIN_UNITS
 
-    def __init__(self, reference_person: Person, people: List[Person], parent=None):
+    def __init__(self, reference_person: Person, people: List[Person], click_callback, parent = None):
         super().__init__(parent)
 
         self.max_gen_num = 0
         self.gen_counter = 0
+        self.click_callback = click_callback
         self.ref_unit: FamilyUnit = self.build_unit(reference_person, people)
 
         self.ref_unit.setPos(0,0)
@@ -27,7 +28,7 @@ class FamilyBranches(QGraphicsItem):
         self.ref_unit.draw_heads_connection()
 
     def build_unit(self, person: Person, people: List[Person]) -> FamilyUnit:
-        unit: FamilyUnit = FamilyUnit(person, people, self)
+        unit: FamilyUnit = FamilyUnit(person, people, self, self.click_callback)
         children_units: List[FamilyUnit] = []
         for kid_id in person.kids:
             for kid in (kid for kid in people if kid_id == kid.id):

@@ -23,7 +23,7 @@ def get_x_offset(x_offset: int, item: QGraphicsItem):
 
 class FamilyUnit(QGraphicsItem):
 
-    def __init__(self, person: Person, people: List[Person], parent=None):
+    def __init__(self, person: Person, people: List[Person], parent, click_callback):
         super().__init__(parent)
         self.unit_head: List[Person] = []
         self.unit_head.append(person)
@@ -33,7 +33,7 @@ class FamilyUnit(QGraphicsItem):
         
         self.head_graph: List[GraphPerson] = []
         for head in self.unit_head:
-            self.head_graph.append(GraphPerson(head, self))
+            self.head_graph.append(GraphPerson(head, self, click_callback))
 
         self.children_units: List["FamilyUnit"] = []
         self.parents_units: List["FamilyUnit"] = []

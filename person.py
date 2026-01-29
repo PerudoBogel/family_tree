@@ -24,11 +24,18 @@ class Person:
             return 0
     
     @property
-    def name_n_birth(self) -> str:
+    def search_name(self) -> str:
         try:
-            return self.name + "(" + str(self.birth_year) + ")"
+            valid = self.last_name and self.name != 0
+            if valid:
+                family_name = self.family_name if self.family_name else "-"
+                last_name = self.last_name + " (" + family_name + ")" if self.family_name != self.last_name else self.last_name
+                birth_year = "(" + str(self.birth_year) + ")" if self.birth_year != 0 and self.birth_year != "XXXX" else ""
+                return last_name + " " + self.name + birth_year
+            else:
+                return ""
         except Exception:
-            return 0
+            return ""
 
     @classmethod
     def from_dict(cls, data: dict) -> "Person":

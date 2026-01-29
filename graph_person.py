@@ -12,11 +12,12 @@ class GraphPerson(QGraphicsRectItem):
     WIDTH = 150
     HEIGHT = 80
 
-    def __init__(self, person: Person, parent=None):
+    def __init__(self, person: Person, parent, click_callback = None):
         # Initialize with fixed dimensions
         super().__init__(0, 0, self.WIDTH, self.HEIGHT, parent)
         
         self.person = person
+        self.click_callback = click_callback
         
         # 1. Aesthetics (Wood and Moss)
         self.setBrush(QBrush(QColor("#F7F1DE"))) # Background
@@ -35,17 +36,40 @@ class GraphPerson(QGraphicsRectItem):
         self.name_item.setPos(0, 10)
 
         # 3. Details Text (Brown)
-        detail_text = f"{person.birth_date}"
-        self.detail_item = QGraphicsTextItem(detail_text, self)
-        self.detail_item.setFont(QFont("Segoe UI", 8))
-        self.detail_item.setDefaultTextColor(QColor("#654321"))
-        self.detail_item.setTextWidth(self.WIDTH)
+        if person.birth_date:
+            detail_text = "* " + str(person.birth_date)
+            self.birth_item = QGraphicsTextItem(detail_text, self)
+            self.birth_item.setFont(QFont("Segoe UI", 8, QFont.Bold))
+            self.birth_item.setDefaultTextColor(QColor("#654321"))
+            self.birth_item.setTextWidth(self.WIDTH)
+            
+            detail_opt = self.birth_item.document().defaultTextOption()
+            detail_opt.setAlignment(Qt.AlignCenter)
+            self.birth_item.document().setDefaultTextOption(detail_opt)
+            self.birth_item.setPos(0, 43)
         
-        detail_opt = self.detail_item.document().defaultTextOption()
-        detail_opt.setAlignment(Qt.AlignCenter)
-        self.detail_item.document().setDefaultTextOption(detail_opt)
-        self.detail_item.setPos(0, 48)
+        if person.death_date:
+            detail_text = "+ " + str(person.death_date)
+            self.death_item = QGraphicsTextItem(detail_text, self)
+            self.death_item.setFont(QFont("Segoe UI", 8, QFont.Bold))
+            self.death_item.setDefaultTextColor(QColor("#654321"))
+            self.death_item.setTextWidth(self.WIDTH)
+            
+            detail_opt = self.death_item.document().defaultTextOption()
+            detail_opt.setAlignment(Qt.AlignCenter)
+            self.death_item.document().setDefaultTextOption(detail_opt)
+            self.death_item.setPos(0, 55)
     
+    def mousePressEvent(self, event):
+        
+        if self.click_callback:
+            self.click_callback(self.person)
+
+        try:
+            super().mousePressEvent(event)
+        except:
+            pass
+
     def highlight(self):
         self.setPen(QPen(QColor("#4B352A"), 5))   # Border
         self.setBrush(QBrush(QColor("#D4BF79"))) # Background

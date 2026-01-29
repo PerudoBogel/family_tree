@@ -18,7 +18,6 @@ class PersonEditor(QWidget):
         self.resize(650, 650)
         self.people: List[Person] = []
         self.current_person: Person = None
-        self.selected_index: int = 0
         self.refresh_callback = None
 
         self.name_edit = QLineEdit()
@@ -94,11 +93,8 @@ class PersonEditor(QWidget):
     def update_people(self, people):
         self.people = people
 
-    def select_person(self, index):
-        if index < 0 or index >= len(self.people):
-            return
-        self.selected_index = index
-        self.current_person = self.people[self.selected_index]
+    def select_person(self, person):
+        self.current_person = next(x for x in self.people if person == x)
         self.name_edit.setText(self.current_person.name)
         self.middle_name_edit.setText(self.current_person.middle_name)
         self.last_name_edit.setText(self.current_person.last_name)

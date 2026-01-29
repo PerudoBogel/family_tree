@@ -27,7 +27,6 @@ class FamilyEditor(QWidget):
 
         self.people: List[Person] = []
         self.current_person = None
-        self.selected_index = 0
         
         self.person_editor = PersonEditor()
 
@@ -51,12 +50,18 @@ class FamilyEditor(QWidget):
         self.export_btn = QPushButton("Export Graph (JPEG)")
         self.export_btn.clicked.connect(self.export_graph)
 
-        self.list_widget.currentRowChanged.connect(lambda select_person: self.select_person(select_person))
+        self.list_widget.currentRowChanged.connect(lambda select_person: self.select_person_from_index(select_person))
         self.person_editor.register_refresh(self.refresh)
 
-        self.tree_view = FamilyTreeView()
+        self.tree_view = FamilyTreeView(self.select_person)
 
         self.build_ui()
+    
+    def select_person_from_index(self, index):
+        if index < 0 or index >= len(self.people):
+            return None
+        self.current_person = self.people[index]
+        self.select_person(self.current_person)
     
     def select_person(self, sel):
         self.person_editor.select_person(sel)
@@ -95,9 +100,9 @@ class FamilyEditor(QWidget):
 
     def refresh(self):
         self.list_widget.clear()
-        self.people.sort(key = lambda p: p.name)
+        self.people.sort(key = lambda p: (p.last_name + " " + p.name))
         for p in self.people:
-            self.list_widget.addItem(p.name_n_birth or "(Unnamed)")
+            self.list_widget.addItem(p.search_name or "(Unnamed)")
         self.tree_view.set_people(self.people)
         self.tree_view.draw_tree()
 
