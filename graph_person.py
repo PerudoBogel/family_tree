@@ -24,7 +24,8 @@ class GraphPerson(QGraphicsRectItem):
         self.setPen(QPen(QColor("#4B352A"), 2))   # Border
 
         # 2. Name Text (Bold Green)
-        self.name_item = QGraphicsTextItem(person.name + " " + person.last_name, self)
+        family_name = ((" " + "(" + person.family_name + ")") if  not person.family_name in person.last_name else "")
+        self.name_item = QGraphicsTextItem(person.with_full_last_name, self)
         self.name_item.setFont(QFont("Segoe UI", 10, QFont.Bold))
         self.name_item.setDefaultTextColor(QColor("#2E6F40"))
         self.name_item.setTextWidth(self.WIDTH)

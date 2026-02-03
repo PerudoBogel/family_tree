@@ -14,11 +14,15 @@ from family_unit import FamilyUnit, MARGIN, MARGIN_UNITS
 class FamilyBranches(QGraphicsItem):
     GEN_OFFSET: int = GraphPerson.HEIGHT + MARGIN_UNITS
 
-    def __init__(self, reference_person: Person, people: List[Person], click_callback, parent = None):
+    def __init__(self, reference_person: Person, people: List[Person], click_callback, parent = None, move_child_right: int = None,  move_child_left: int = None):
         super().__init__(parent)
+
+        self.move_child_right = move_child_right
+        self.move_child_left = move_child_left
 
         self.max_gen_num = 0
         self.gen_counter = 0
+        self.units: List[FamilyUnit] = []
         self.click_callback = click_callback
         self.ref_unit: FamilyUnit = self.build_unit(reference_person, people)
 
@@ -29,8 +33,19 @@ class FamilyBranches(QGraphicsItem):
 
     def build_unit(self, person: Person, people: List[Person]) -> FamilyUnit:
         unit: FamilyUnit = FamilyUnit(person, people, self, self.click_callback)
+        self.units.append(unit)
         children_units: List[FamilyUnit] = []
-        for kid_id in person.kids:
+
+        kid_ids = person.kids
+        if self.move_child_right and self.move_child_right in kid_ids:
+            kid_ids.remove(self.move_child_right)
+            kid_ids.append(self.move_child_right)
+        
+        if self.move_child_left and self.move_child_left in kid_ids:
+            kid_ids.remove(self.move_child_left)
+            kid_ids.insert(0,self.move_child_left)
+
+        for kid_id in kid_ids:
             for kid in (kid for kid in people if kid_id == kid.id):
                 self.gen_counter += 1
                 children_units.append(self.build_unit(kid, people))
@@ -39,7 +54,7 @@ class FamilyBranches(QGraphicsItem):
         unit.add_children_units(children_units)
         return unit
     
-    def draw_unit(self, unit: FamilyUnit, parent_offset_x: int) -> FamilyUnit:
+    def draw_unit(self, unit: FamilyUnit, parent_offset_x: int):
         children_width = 0
         child_offset_x = parent_offset_x
         unit.align(unit.get_width(with_children=True))
@@ -83,11 +98,11 @@ people_data: List[Person] = [
     # Generation 1
     {
         "id": 1, "name": "Arthur Dent", "birth_date": "1950-05-12",
-        "partners": [2], "kids": [3, 5]
+        "partners": [2], "kids": [3, 5, 11]
     },
     {
         "id": 2, "name": "Beryl Dent", "birth_date": "1952-08-20",
-        "partners": [1], "kids": [3, 5]
+        "partners": [1], "kids": [3, 5, 11]
     },
     
     # Generation 2
@@ -107,6 +122,10 @@ people_data: List[Person] = [
         "id": 6, "name": "George Miller", "birth_date": "1979-06-30",
         "partners": [5], "kids": [8, 9, 10]
     },
+    {
+        "id": 11, "name": "Charles 2nd Dent", "birth_date": "1975-03-15",
+        "parents": [1, 2], "partners": [], "kids": []
+    },
 
     # Generation 3
     {
@@ -124,7 +143,7 @@ people_data: List[Person] = [
     {
         "id": 10, "name": "May Miller", "birth_date": "2012-09-09",
         "parents": [5, 6], "partners": [], "kids": []
-    }
+    },
 ]
 
 # Create the List[Person]
@@ -135,15 +154,25 @@ import sys
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     
-    branches = FamilyBranches(people[0], people)
     
     scene = QGraphicsScene(0, 0, 1600, 600)
     view = QGraphicsView(scene)
     view.setRenderHint(QPainter.Antialiasing)
 
     # Add to scene
+    branches = FamilyBranches(people[0], people, lambda arg: print(arg))
     branches.setPos(MARGIN, MARGIN)
     scene.addItem(branches)
+    
+    # Add to scene child rigth
+    branches1 = FamilyBranches(people[0], people, lambda arg: print(arg), move_child_left=5)
+    branches1.setPos(MARGIN, MARGIN + branches.get_height() + GraphPerson.HEIGHT * 2 + MARGIN_UNITS)
+    scene.addItem(branches1)
+    
+    # Add to scene child left
+    branches2 = FamilyBranches(people[0], people, lambda arg: print(arg), move_child_right=5)
+    branches2.setPos(MARGIN, MARGIN + branches.get_height() + branches1.get_height() + GraphPerson.HEIGHT * 2 + MARGIN_UNITS)
+    scene.addItem(branches2)
 
     view.show()
     sys.exit(app.exec())

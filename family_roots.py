@@ -19,6 +19,7 @@ class FamilyRoots(QGraphicsItem):
 
         self.max_gen_num = 0
         self.gen_counter = 0
+        self.units_graph: List[FamilyUnit] = []
         self.click_callback = click_callback
         self.ref_unit: FamilyUnit = self.build_unit(reference_person, people)
 
@@ -40,7 +41,7 @@ class FamilyRoots(QGraphicsItem):
         unit.add_parent_units(units)
         return unit
     
-    def draw_unit(self, unit: FamilyUnit, parent_offset_x: int) -> FamilyUnit:
+    def draw_unit(self, unit: FamilyUnit, parent_offset_x: int):
         parents_width = 0
         offset_x = parent_offset_x
         unit.align(unit.get_width(with_parents=True))

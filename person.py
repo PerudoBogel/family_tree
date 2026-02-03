@@ -26,12 +26,31 @@ class Person:
     @property
     def search_name(self) -> str:
         try:
-            valid = self.last_name and self.name != 0
-            if valid:
-                family_name = self.family_name if self.family_name else "-"
-                last_name = self.last_name + " (" + family_name + ")" if self.family_name != self.last_name else self.last_name
+            if self.name:
                 birth_year = "(" + str(self.birth_year) + ")" if self.birth_year != 0 and self.birth_year != "XXXX" else ""
-                return last_name + " " + self.name + birth_year
+                return self.full_last_name + " " + self.name + birth_year
+            else:
+                return ""
+        except Exception:
+            return ""
+    
+    @property
+    def full_last_name(self) -> str:
+        try:
+            if self.name:
+                family_name = (" " + "(" + self.family_name + ")") if  not self.family_name in self.last_name else ""
+                return self.last_name + family_name
+            else:
+                return ""
+        except Exception:
+            return ""
+    
+    @property
+    def with_full_last_name(self) -> str:
+        try:
+            if self.name:
+                family_name = (" " + "(" + self.family_name + ")") if  not self.family_name in self.last_name else ""
+                return self.name + " " + self.full_last_name
             else:
                 return ""
         except Exception:

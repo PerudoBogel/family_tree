@@ -7,38 +7,11 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QPen, QBrush, QImage, QPainter
 from PySide6.QtCore import Qt
-from family_unit import MARGIN
+from family_unit import MARGIN, FamilyUnit
 from family_branches import FamilyBranches
 from family_roots import FamilyRoots
 
 from person import Person
-
-# class RefSelector(QComboBox):
-#     def __init__(self, updated_cb):
-#         super().__init__()
-#         self.activated.connect(self._on_combo_activated)
-#         self.people: List[Person] = []
-#         self.selected: Person = None
-#         self.updated_cb = updated_cb
-    
-#     def set_options(self, people: List[Person]):
-#         self.people = people
-        
-#         self.clear()
-#         if self.people:
-#             self.addItem("Select to add...")
-#             self.addItems([x.search_name for x in self.people])
-#         else:
-#             self.addItem("No more items")
-
-#         if self.selected in self.people:
-#             self.removeItem(0)
-#             self.setCurrentIndex(self.people.index(self.selected))
-    
-#     def _on_combo_activated(self, index):
-#         if index > 0:
-#             self.updated_cb(self.people[index - 1])
-#             self.selected = self.people[index - 1]
 
 class FamilyTreeView(QVBoxLayout):
     def __init__(self, click_callback):
@@ -49,9 +22,6 @@ class FamilyTreeView(QVBoxLayout):
         self.graph_view.setMinimumWidth(600)
         self.click_callback = click_callback
 
-        # self.ref_selector = RefSelector(self.select_ref)
-
-        # self.addWidget(self.ref_selector)
         self.addWidget(self.graph_view)
 
         self.people: List[Person] = []
@@ -59,8 +29,21 @@ class FamilyTreeView(QVBoxLayout):
     
     def set_people(self, people: List[Person]):
         self.people = people
-        # self.ref_selector.set_options(people)
         self.draw_tree()
+    
+    def erase_unit_with_children_from_graph(self, ref_unit: FamilyUnit):
+        ref_unit.setVisible(False)
+        for child_unit in ref_unit.children_units:
+            self.erase_unit_with_children_from_graph(child_unit)
+    
+    def highlight_unit_or_child_unit(self, ref_unit: FamilyUnit, id: int):
+        try:
+            highlight_graph = next(x for x in ref_unit.head_graph if x.person.id == id)
+            highlight_graph.highlight()
+            highlight_graph.update()
+        except:
+            for child_unit in ref_unit.children_units:
+                self.highlight_unit_or_child_unit(child_unit, id)
 
     def draw_tree(self):
         self.scene.clear()
@@ -69,30 +52,26 @@ class FamilyTreeView(QVBoxLayout):
         if not self.ref_people:
             self.ref_people.append(self.people[0])
         
-        draw_reference = self.ref_people[0]
-        ref_person = self.ref_people[0]
-        is_solo = False
-        # is solo
-        if len(draw_reference.partners) == 0 and len(draw_reference.parents) > 0:
-            is_solo = True
-            draw_reference = next(x for x in self.people if x.id == draw_reference.parents[0])
+        draw_reference: Person = self.ref_people[0]
+        ref_person: Person = self.ref_people[0]
         
         self.roots = FamilyRoots(draw_reference, self.people, self.click_callback)
-        self.roots.ref_unit.setVisible(False)
+        ref_unit = self.roots.ref_unit
+        while len(ref_unit.parents_units) == 1:
+            ref_unit = ref_unit.parents_units[0]
+            self.roots.max_gen_num -= 1 
+        
+        draw_reference = ref_unit.unit_head[0]
+        
         self.branches = FamilyBranches(draw_reference, self.people, self.click_callback)
 
-        if is_solo:
-            for child_unit in self.branches.ref_unit.children_units:
-                for graph in [ x for x in child_unit.head_graph if x.person.id == ref_person.id]:
-                    graph.highlight()
-                    graph.update()
-        else:
-            for graph in [ x for x in self.branches.ref_unit.head_graph if x.person.id == draw_reference.id]:
-                graph.highlight()
-                graph.update()
+        if draw_reference != ref_person:
+            self.erase_unit_with_children_from_graph(ref_unit)
 
-        roots_offset = self.branches.ref_unit.x_offset - self.roots.ref_unit.x_offset if self.branches.get_width() > self.roots.get_width() else 0
-        branches_offset = self.roots.ref_unit.x_offset - self.branches.ref_unit.x_offset if self.roots.get_width() > self.branches.get_width() else 0
+        self.highlight_unit_or_child_unit(self.branches.ref_unit, ref_person.id)
+
+        roots_offset = self.branches.ref_unit.x_offset - ref_unit.x_offset if self.branches.get_width() > self.roots.get_width() else 0
+        branches_offset = ref_unit.x_offset - self.branches.ref_unit.x_offset if self.roots.get_width() > self.branches.get_width() else 0
         
         self.roots.setPos(MARGIN + roots_offset, MARGIN)
         self.branches.setPos(MARGIN + branches_offset, self.roots.get_height() + MARGIN)
