@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtGui import QPen, QBrush, QImage, QPainter
 from PySide6.QtCore import Qt
-from family_unit import MARGIN, FamilyUnit
+from family_unit import MARGIN, FamilyUnit, get_x_offset
 from family_branches import FamilyBranches
 from family_roots import FamilyRoots
 
@@ -30,6 +30,9 @@ class FamilyTreeView(QVBoxLayout):
     def set_people(self, people: List[Person]):
         self.people = people
         self.draw_tree()
+    
+    def make_siblings(self):
+        pass
     
     def erase_unit_with_children_from_graph(self, ref_unit: FamilyUnit):
         ref_unit.setVisible(False)
@@ -55,29 +58,82 @@ class FamilyTreeView(QVBoxLayout):
         draw_reference: Person = self.ref_people[0]
         ref_person: Person = self.ref_people[0]
         
-        self.roots = FamilyRoots(draw_reference, self.people, self.click_callback)
-        ref_unit = self.roots.ref_unit
+        roots = FamilyRoots(draw_reference, self.people, self.click_callback)
+        ref_unit = roots.ref_unit
         while len(ref_unit.parents_units) == 1:
             ref_unit = ref_unit.parents_units[0]
-            self.roots.max_gen_num -= 1 
+            roots.max_gen_num -= 1 
         
         draw_reference = ref_unit.unit_head[0]
-        
-        self.branches = FamilyBranches(draw_reference, self.people, self.click_callback)
-
         if draw_reference != ref_person:
             self.erase_unit_with_children_from_graph(ref_unit)
 
-        self.highlight_unit_or_child_unit(self.branches.ref_unit, ref_person.id)
+        left_branch: FamilyBranches = None
+        right_branch: FamilyBranches = None
+        left_ref_unit: FamilyUnit = None
+        if len(ref_unit.parents_units) >= 2:
+            self.erase_unit_with_children_from_graph(ref_unit.parents_units[0])
+            self.erase_unit_with_children_from_graph(ref_unit.parents_units[1])
 
-        roots_offset = self.branches.ref_unit.x_offset - ref_unit.x_offset if self.branches.get_width() > self.roots.get_width() else 0
-        branches_offset = ref_unit.x_offset - self.branches.ref_unit.x_offset if self.roots.get_width() > self.branches.get_width() else 0
+            left_siblings_person_id = ref_unit.unit_head[0].id
+            right_siblings_person_id = ref_unit.unit_head[1].id
+
+            left_branch = FamilyBranches(ref_unit.parents_units[0].unit_head[0], self.people, self.click_callback, move_child_right=left_siblings_person_id)
+            right_branch = FamilyBranches(ref_unit.parents_units[1].unit_head[0], self.people, self.click_callback, move_child_left=right_siblings_person_id)
+
+            # align y
+            head_offset_y: int = ref_unit.parents_units[0].y() - left_branch.ref_unit.y()
+            left_branch.setPos(left_branch.x(), left_branch.y() + head_offset_y + MARGIN)
+            right_branch.setPos(right_branch.x(), right_branch.y() + head_offset_y + MARGIN)
+            
+            left_ref_unit = next(x for x in left_branch.ref_unit.children_units if ref_unit.unit_head[0] in x.unit_head)
+
+            #align branches to POI children
+            ref_x_offset = get_x_offset(0,ref_unit.head_graph[0])
+            left_branch_x_offset = ref_x_offset - get_x_offset(0,next(x for x in left_branch.ref_unit.children_units if ref_unit.unit_head[0] in x.unit_head).head_graph[0])
+            right_branch_x_offset = ref_x_offset - get_x_offset(0,next(x for x in right_branch.ref_unit.children_units if ref_unit.unit_head[1] in x.unit_head).head_graph[0])
+
+            left_branch.setPos(left_branch.x() + left_branch_x_offset, left_branch.y())
+            right_branch.setPos(right_branch.x() + right_branch_x_offset, right_branch.y())
+        else:
+            left_branch = FamilyBranches(draw_reference, self.people, self.click_callback)
+            left_ref_unit = left_branch.ref_unit
         
-        self.roots.setPos(MARGIN + roots_offset, MARGIN)
-        self.branches.setPos(MARGIN + branches_offset, self.roots.get_height() + MARGIN)
+        sibling_ref_offset_x = get_x_offset(0, left_ref_unit.head_graph[0])
+        root_ref_offset_x = get_x_offset(0, ref_unit.head_graph[0])
 
-        self.scene.addItem(self.roots)
-        self.scene.addItem(self.branches)
+        root_x_trans = sibling_ref_offset_x - root_ref_offset_x if sibling_ref_offset_x > root_ref_offset_x else 0
+        branch_x_trans = root_ref_offset_x - sibling_ref_offset_x if sibling_ref_offset_x < root_ref_offset_x else 0
+
+        #align graphs
+        roots.setPos(MARGIN + root_x_trans, MARGIN)
+        if left_branch:
+            left_branch.setPos(MARGIN + branch_x_trans + left_branch.x(), left_branch.y())
+        if right_branch:
+            right_branch.setPos(MARGIN + branch_x_trans + right_branch.x(), right_branch.y())
+
+        # #align branches heads
+        if left_branch and right_branch:
+            left_x_offset = get_x_offset(0,ref_unit.parents_units[0].head_graph[0]) - get_x_offset(0,left_branch.ref_unit.head_graph[0])
+            left_branch.ref_unit.setPos(left_x_offset + left_branch.ref_unit.x(), left_branch.ref_unit.y())
+            left_branch.ref_unit.draw_heads_connection()
+            
+            right_x_offset = get_x_offset(0,ref_unit.parents_units[1].head_graph[0]) - get_x_offset(0,right_branch.ref_unit.head_graph[0])
+            right_branch.ref_unit.setPos(right_x_offset + right_branch.ref_unit.x(), right_branch.ref_unit.y())
+            right_branch.ref_unit.draw_heads_connection()
+
+            right_ref_unit = next(x for x in right_branch.ref_unit.children_units if ref_unit.unit_head[0] in x.unit_head)
+            self.erase_unit_with_children_from_graph(right_ref_unit)
+
+        self.highlight_unit_or_child_unit(left_branch.ref_unit, ref_person.id)
+
+        if left_branch:
+            self.scene.addItem(left_branch)
+        if right_branch:
+            self.scene.addItem(right_branch)
+        self.scene.addItem(roots)
+
+        self.scene.update()
 
     def export_to_jpeg(self, path: str):
         rect = self.scene.itemsBoundingRect()
