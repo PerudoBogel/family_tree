@@ -107,7 +107,7 @@ class FamilyEditor(QWidget):
         self.tree_view.draw_tree()
 
     def add_person(self):
-        self.people.append(Person(self.next_id(), "", "", [], []))
+        self.people.append(Person(self.next_id(), "", "", "", "", "", "", "", ""))
         self.refresh()
         self.list_widget.setCurrentRow(0)
 

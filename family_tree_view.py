@@ -68,6 +68,9 @@ class FamilyTreeView(QVBoxLayout):
         if draw_reference != ref_person:
             self.erase_unit_with_children_from_graph(ref_unit)
 
+        if len(ref_unit.parents_units) == 0:
+            roots.setVisible(False)
+
         left_branch: FamilyBranches = None
         right_branch: FamilyBranches = None
         left_ref_unit: FamilyUnit = None
