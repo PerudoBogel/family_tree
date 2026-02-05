@@ -1,0 +1,36 @@
+{
+  "people": [
+    {
+      "id": 2,
+      "name": "kid",
+      "middle_name": "",
+      "last_name": "",
+      "family_name": "",
+      "birth_date": "",
+      "death_date": "",
+      "notes": "",
+      "photo_source": "",
+      "partners": [],
+      "parents": [
+        1
+      ],
+      "kids": []
+    },
+    {
+      "id": 1,
+      "name": "parent",
+      "middle_name": "",
+      "last_name": "",
+      "family_name": "",
+      "birth_date": "",
+      "death_date": "",
+      "notes": "",
+      "photo_source": "",
+      "partners": [],
+      "parents": [],
+      "kids": [
+        2
+      ]
+    }
+  ]
+}
