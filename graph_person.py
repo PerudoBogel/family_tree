@@ -9,8 +9,8 @@ from PySide6.QtCore import Qt
 from person import Person
 
 class GraphPerson(QGraphicsRectItem):
-    WIDTH = 150
-    HEIGHT = 80
+    WIDTH = 130
+    HEIGHT = 70
 
     def __init__(self, person: Person, parent, click_callback = None):
         # Initialize with fixed dimensions
@@ -34,24 +34,21 @@ class GraphPerson(QGraphicsRectItem):
         name_opt = self.name_item.document().defaultTextOption()
         name_opt.setAlignment(Qt.AlignHCenter)
         self.name_item.document().setDefaultTextOption(name_opt)
-        self.name_item.setPos(0, 10)
+        self.name_item.setPos(0, 0)
 
         # 3. Details Text (Brown)
+        life_time = ""
         if person.birth_date:
-            detail_text = "* " + str(person.birth_date)
-            self.birth_item = QGraphicsTextItem(detail_text, self)
-            self.birth_item.setFont(QFont("Segoe UI", 8, QFont.Bold))
-            self.birth_item.setDefaultTextColor(QColor("#654321"))
-            self.birth_item.setTextWidth(self.WIDTH)
-            
-            detail_opt = self.birth_item.document().defaultTextOption()
-            detail_opt.setAlignment(Qt.AlignCenter)
-            self.birth_item.document().setDefaultTextOption(detail_opt)
-            self.birth_item.setPos(0, 43)
+            life_time += "★" + person.birth_year
         
+        if life_time and person.death_date:
+            life_time += "  "
+
         if person.death_date:
-            detail_text = "+ " + str(person.death_date)
-            self.death_item = QGraphicsTextItem(detail_text, self)
+            life_time += "+" + person.death_year
+
+        if life_time:
+            self.death_item = QGraphicsTextItem(life_time, self)
             self.death_item.setFont(QFont("Segoe UI", 8, QFont.Bold))
             self.death_item.setDefaultTextColor(QColor("#654321"))
             self.death_item.setTextWidth(self.WIDTH)
@@ -59,7 +56,8 @@ class GraphPerson(QGraphicsRectItem):
             detail_opt = self.death_item.document().defaultTextOption()
             detail_opt.setAlignment(Qt.AlignCenter)
             self.death_item.document().setDefaultTextOption(detail_opt)
-            self.death_item.setPos(0, 55)
+            self.death_item.setPos(0, 48)
+
     
     def mousePressEvent(self, event):
         
@@ -92,15 +90,15 @@ if __name__ == "__main__":
     view.setRenderHint(QPainter.Antialiasing)
 
     # Create Person from dataclass
-    p1 = Person(id=1, name="Jan Kowalski", birth_date="1950-05-12")
-    p2 = Person.from_dict({"id": 2, "name": "Anna Nowak", "birth_date": "1982-11-23"})
+    p1 = Person(1, "Jan", "michal", "KowalskiKowalski", "Kowalski", "1950-05-12", "1950-05-12", "", "",[],[],[])
+    p2 = Person(2, "Anna", "malgorzata", "Nowak Nowak Nowak", "Kowalski",  "1982-11-23", "1950-05-12", "", "",[],[],[])
 
     # Add to scene
-    item1 = GraphPerson(p1)
+    item1 = GraphPerson(p1,None)
     item1.setPos(50, 50)
     scene.addItem(item1)
 
-    item2 = GraphPerson(p2)
+    item2 = GraphPerson(p2,None)
     item2.setPos(250, 50)
     scene.addItem(item2)
 

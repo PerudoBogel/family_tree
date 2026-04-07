@@ -11,8 +11,8 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QPen, QBrush, QColor, QFont, QPainter
 from PySide6.QtCore import QRectF, Qt, QLine
 
-MARGIN: int = 20
-MARGIN_UNITS: int = 80
+MARGIN_UNITS: int = GraphPerson.HEIGHT/1.8
+MARGIN: int = MARGIN_UNITS/3
 
 def get_x_offset(x_offset: int, item: QGraphicsItem):
     parent = item
@@ -93,26 +93,24 @@ class FamilyUnit(QGraphicsItem):
         self.segments.clear()
         mid_point_x = None
         if len(self.head_graph) > 1:
-            # Define pen style (color, width)
-
-            vert_y: int = int(self.head_graph[0].y() + GraphPerson.HEIGHT + MARGIN_UNITS/4)
+            vert_y: int = int(self.head_graph[0].y() + GraphPerson.HEIGHT + MARGIN_UNITS/3)
             vert_x1: int = int(self.head_graph[0].x() + GraphPerson.WIDTH/2)
             vert_x2: int = int(self.head_graph[1].x() + GraphPerson.WIDTH/2)
             mid_point_x = (vert_x1 + vert_x2) / 2
             self.segments += [
-                QGraphicsLineItem(vert_x1, vert_y - MARGIN_UNITS/4, vert_x1, vert_y,self),
-                QGraphicsLineItem(vert_x2, vert_y - MARGIN_UNITS/4, vert_x2, vert_y,self),
+                QGraphicsLineItem(vert_x1, vert_y - MARGIN_UNITS/3, vert_x1, vert_y,self),
+                QGraphicsLineItem(vert_x2, vert_y - MARGIN_UNITS/3, vert_x2, vert_y,self),
                 QGraphicsLineItem(vert_x1, vert_y, vert_x2, vert_y,self),
             ]
         elif len(self.head_graph) == 1:
-            vert_y: int = int(self.head_graph[0].y() + GraphPerson.HEIGHT + MARGIN_UNITS/4)
+            vert_y: int = int(self.head_graph[0].y() + GraphPerson.HEIGHT + MARGIN_UNITS/3)
             mid_point_x = int(self.head_graph[0].x() + GraphPerson.WIDTH/2)
             if len(self.children_units)>0:
-                self.segments.append(QGraphicsLineItem(mid_point_x, vert_y - MARGIN_UNITS/4, mid_point_x, vert_y,self))
+                self.segments.append(QGraphicsLineItem(mid_point_x, vert_y - MARGIN_UNITS/3, mid_point_x, vert_y,self))
 
         if len(self.children_units)>0 and mid_point_x:
             start_point_x = mid_point_x
-            start_point_y = vert_y + MARGIN_UNITS/2
+            start_point_y = vert_y + MARGIN_UNITS/3
             self.segments.append(QGraphicsLineItem(start_point_x, vert_y, start_point_x, start_point_y,self))
             children = []
             for head in self.unit_head:
@@ -124,11 +122,11 @@ class FamilyUnit(QGraphicsItem):
                     kid_offest = get_x_offset(GraphPerson.WIDTH / 2, kid)
                     x_offset = mid_offest - kid_offest
                     end_point_x = start_point_x - x_offset 
-                    end_point_y = start_point_y + MARGIN_UNITS/4
+                    end_point_y = start_point_y + MARGIN_UNITS/3
                     self.segments.append(QGraphicsLineItem(start_point_x, start_point_y, end_point_x, start_point_y,self))
                     self.segments.append(QGraphicsLineItem(end_point_x, start_point_y, end_point_x, end_point_y,self))
 
-        pen = QPen(Qt.black, 3)
+        pen = QPen(QColor("#654321"), 1)
         for segment in self.segments:
             segment.setPen(pen)
 

@@ -21,7 +21,14 @@ class Person:
         try:
             return self.birth_date.split("-")[0]
         except Exception:
-            return 0
+            return ""
+    
+    @property
+    def death_year(self) -> str:
+        try:
+            return self.death_date.split("-")[0]
+        except Exception:
+            return ""
     
     @property
     def search_name(self) -> str:

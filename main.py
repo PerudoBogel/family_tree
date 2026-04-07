@@ -1,18 +1,19 @@
 import json
 from dataclasses import dataclass, field
-from typing import List
 from datetime import datetime
+from typing import List
 
-from PySide6.QtWidgets import (
-    QApplication, QWidget, QListWidget, QLineEdit, QTextEdit,
-    QPushButton, QFileDialog, QLabel, QHBoxLayout, QVBoxLayout,
-    QGraphicsView, QGraphicsScene, QGraphicsRectItem, QGraphicsTextItem,
-    QMessageBox, QComboBox, QListWidgetItem, QFrame
-)
-from PySide6.QtGui import QPen, QBrush, QImage, QPainter
 from PySide6.QtCore import Qt
-from person import Person
+from PySide6.QtGui import QBrush, QImage, QPainter, QPen
+from PySide6.QtWidgets import (
+    QApplication, QFileDialog, QFrame, QGraphicsRectItem, QGraphicsScene,
+    QGraphicsTextItem, QGraphicsView, QHBoxLayout, QLabel, QLineEdit,
+    QListWidget, QListWidgetItem, QMessageBox, QPushButton, QTextEdit,
+    QVBoxLayout, QWidget, QComboBox
+)
+
 from family_tree_view import FamilyTreeView
+from person import Person
 from person_editor import PersonEditor
 
 # =======================
@@ -50,7 +51,7 @@ class FamilyEditor(QWidget):
         self.export_btn = QPushButton("Export Graph (JPEG)")
         self.export_btn.clicked.connect(self.export_graph)
 
-        self.list_widget.currentRowChanged.connect(lambda select_person: self.select_person_from_index(select_person))
+        self.list_widget.currentRowChanged.connect(self.select_person_from_index)
         self.person_editor.register_refresh(self.refresh)
 
         self.tree_view = FamilyTreeView(self.select_person)
@@ -100,7 +101,7 @@ class FamilyEditor(QWidget):
 
     def refresh(self):
         self.list_widget.clear()
-        self.people.sort(key = lambda p: (p.last_name + " " + p.name))
+        self.people.sort(key=lambda p: f"{p.last_name} {p.name}")
         for p in self.people:
             self.list_widget.addItem(p.search_name or "(Unnamed)")
         self.tree_view.set_people(self.people)
@@ -125,18 +126,9 @@ class FamilyEditor(QWidget):
             self.people.pop(idx)
             for p in self.people:
                 if person.name in p.kids:
-                    try:
-                        p.parents.remove(person.name)
-                    except:
-                        pass
-                    try:
-                        p.kids.remove(person.name)
-                    except:
-                        pass
-                    try:
-                        p.partners.remove(person.name)
-                    except:
-                        pass
+                    p.parents.discard(person.name)
+                    p.kids.discard(person.name)
+                    p.partners.discard(person.name)
             self.current_person = None
             self.refresh()
         
