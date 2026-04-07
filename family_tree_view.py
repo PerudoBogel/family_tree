@@ -30,6 +30,9 @@ class FamilyTreeView(QVBoxLayout):
     def set_people(self, people: List[Person]):
         self.people = people
         self.draw_tree()
+        # Center on the first person if no specific selection
+        if self.people:
+            self.center_view_on_person(self.people[0].id)
     
     def make_siblings(self):
         pass
@@ -157,3 +160,31 @@ class FamilyTreeView(QVBoxLayout):
         self.ref_people.clear()
         self.ref_people.append(person_a)
         self.draw_tree()
+        self.center_view_on_person(person_a.id)
+
+    def center_view_on_person(self, person_id: int):
+        """Center the view on the specified person if they're not fully visible."""
+        # Find the GraphPerson item for the selected person
+        target_person = None
+        for item in self.scene.items():
+            if hasattr(item, 'person') and item.person.id == person_id:
+                target_person = item
+                break
+        
+        if target_person is None:
+            return
+        
+        # Get the person's position in scene coordinates
+        person_rect = target_person.sceneBoundingRect()
+        person_center = person_rect.center()
+        
+        # Get the view's visible area
+        view_rect = self.graph_view.viewport().rect()
+        scene_visible_rect = self.graph_view.mapToScene(view_rect).boundingRect()
+        
+        # Check if the person is fully visible in the current view
+        if scene_visible_rect.contains(person_rect):
+            return
+        
+        # Center the view on the person
+        self.graph_view.centerOn(person_center)
